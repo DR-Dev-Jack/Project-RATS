@@ -16,60 +16,69 @@ luchtdichtheid = 1.225 # kilogram per kubieke meter, bij 15C
 zwaartekracht = valversnelling*rocket_weight
 k_waarde = .5*luchtdichtheid*rocket_surface*rocket_drag_coefficient
 
-def generate_moter_curve(force_max, brandtijd):
-    tcalc = []
-    ncalc = []
-    looprange = int(brandtijd * 10 + 1)
-    for i in range(0, looprange):
-        x = i/10
-        tcalc.append(x)
-        ncalc.append(-(force_max/(0.5*brandtijd)**2)*(x-(0.5*brandtijd))**2+force_max)
-
+def generate_moter_curve(brandtijd, d):
+    tcalc = [0, brandtijd/4, brandtijd]
+    ncalc = [0, d*2, 0]
+        
     xpoints = np.array(tcalc)
     ypoints = np.array(ncalc)
 
-    plt.plot(xpoints, ypoints)
-    plt.xlabel("time (t)")
-    plt.ylabel("force (N)")
-    plt.show()
+    return xpoints, ypoints
 
 def calc_drag (k, speed):
     return k*(speed**2)
 
-def plot_height (upforce_avg, mass, k, fz):
+def plot_height (x,y , mass, k, fz, dt=0.1):
     hcalc = []
     tcalc = []
+
     h = 0
     v = 0
     t = 0
+    a = 0
+    fzw = 0
     while h >= 0:
+
+        h += v*dt
+
         tcalc.append(t)
         hcalc.append(h)
-        if t > 1.6:
-            upforce_avg = 0
-            fd = calc_drag(k, v)
-            fn = upforce_avg - fz - fd
-            a = fn / mass
-            v = a * t
-            h = v * t
-            t += 0.1
-        else:
-            fd = calc_drag(k, v)
-            fn = upforce_avg - fz - fd
-            a = fn / mass
-            v = a * t
-            h = v * t
-            t += 0.1
+        
+        fs = np.interp(t, x, y)
+        fd = calc_drag(k, v)
+
+        if fs > fz:
+            fzw = fz
+
+        fn = fs - fzw - fd
+
+        if h <= 0:
+            fn = fs
+
+        a = fn / mass
+        v += a*dt
+
+        
+        t += dt
 
     xpoints = np.array(tcalc)
     ypoints = np.array(hcalc)
 
+    plt.subplot(1, 2, 1)
     plt.plot(xpoints, ypoints)
+    plt.title("Rocket height curve")
 
     plt.xlabel("time (t)")
     plt.ylabel("height (m)")
 
+    plt.subplot(2, 2, 2)
+    plt.plot(x,y)
+    plt.title("Rocket motor output curve")
+
+    plt.xlabel("time (t)")
+    plt.ylabel("power (N)")
+
     plt.show()
 
-plot_height(rocket_motor_avg, rocket_weight, k_waarde,zwaartekracht)
-generate_moter_curve(rocket_motor_max,rocket_motor_brandtijd)
+x_cords, y_cords = generate_moter_curve(rocket_motor_brandtijd, rocket_motor_avg)
+plot_height(x_cords, y_cords, rocket_weight, k_waarde,zwaartekracht)
