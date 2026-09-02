@@ -2,14 +2,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # rocket setup
-rocket_weight = 0.25 # in kilogram
+rocket_weight = 0.25 # kilogram
 rocket_drag_coefficient = 0.6 # to be defined
-rocket_motor_avg = 12 # in newton
-rocket_motor_max = 35 # in newton
-rocket_motor_brandtijd = 1.6 # in seconden
+rocket_motor_avg = 12 # newton
+rocket_motor_max = 35 # newton
+rocket_motor_brandtijd = 1.6 # seconden
+rocket_surface = 4.42*10**-3 # vierkante meter
 
-valversnelling = 9.81 # in meter per seconde kwadraat
+valversnelling = 9.81 # meter per seconde kwadraat
+luchtdichtheid = 1.225 # kilogram per kubieke meter, bij 15C
+
 zwaartekracht = valversnelling*rocket_weight
+k_waarde = .5*luchtdichtheid*rocket_surface*rocket_drag_coefficient
 
 def generate_moter_curve(power_max, brandtijd):
     xcalc = []
@@ -27,13 +31,7 @@ def generate_moter_curve(power_max, brandtijd):
     plt.plot(xpoints, ypoints)
     plt.show()
 
+def calc_drag (k, speed):
+    return k*(speed**2)
 
-def calculate_newton():
-    print("something")
-
-calculate_newton()
 generate_moter_curve(rocket_motor_max,rocket_motor_brandtijd)
-
-
-
-
