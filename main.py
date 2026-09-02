@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import math
 
 # rocket setup
@@ -18,14 +19,16 @@ luchtdichtheid = 1.225 # kilogram per kubieke meter, bij 15C    !!!Add changing 
 zwaartekracht = valversnelling
 k_waarde = .5*luchtdichtheid*rocket_surface*rocket_drag_coefficient
 
-def generate_moter_curve(brandtijd, d):  # !!!Average is 12 Ns, about 7N ): so not right!!!
-    tcalc = [0, brandtijd/4, brandtijd]
-    ncalc = [0, d*2, 0]
-        
-    xpoints = np.array(tcalc)
-    ypoints = np.array(ncalc)
+file_adres = 'TSP_D12.csv'
+skip_lines = 4
 
-    return xpoints, ypoints
+def generate_moter_curve(file_adres, skip_lines):  # !!!Average is 12 Ns, about 7N ): so not right!!!
+    data = pd.read_csv(file_adres, skiprows=skip_lines)
+
+    time = data['Time (s)'].to_numpy()
+    thrust = data['Thrust (N)'].to_numpy()
+
+    return time, thrust
 
 def calc_drag (k, speed):
     return k * speed * abs(speed)
@@ -40,6 +43,7 @@ def plot_height (x, y , mass, k, valversnelling, d1, t1, dt=0.1):
     a = 0
     xy = 0
     total = d1*t1
+    check = False
     while h >= 0:
         # using RK4 would be better than this simple version of eulors function
         h += v*dt
@@ -52,14 +56,15 @@ def plot_height (x, y , mass, k, valversnelling, d1, t1, dt=0.1):
         xy += fs*dt
         minus_weight = xy/total*0.024
         fz = valversnelling*(mass - minus_weight)
+
         fnorm = fz
-        if fs < fz:
+        if fs > fz:
+            check = True
+
+        if check:
             fnorm = 0
 
         fn = fs + fnorm - fz - fd
-
-        if h <= 0:
-            fn = fs
 
         a = fn / mass
         v += a*dt
@@ -85,5 +90,5 @@ def plot_height (x, y , mass, k, valversnelling, d1, t1, dt=0.1):
 
     plt.show()
 
-x_cords, y_cords = generate_moter_curve(rocket_motor_brandtijd, rocket_motor_avg)
+x_cords, y_cords = generate_moter_curve(file_adres, skip_lines)
 plot_height(x_cords, y_cords, rocket_weight, k_waarde,zwaartekracht, rocket_motor_avg, rocket_motor_brandtijd)
