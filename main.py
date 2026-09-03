@@ -7,23 +7,16 @@ import math
 rocket_weight = 0.25 # kilogram
 fuel_weight = 0.024 # still in kilograms
 rocket_drag_coefficient = 0.6 # to be defined
-rocket_motor_avg = 12 # newton
-rocket_motor_max = 35 # still in newton
-rocket_motor_brandtijd = 1.6 # seconden
 rocket_surface = 4.42e-3 # vierkante meter
 
 valversnelling = 9.81 # meter per seconde kwadraat
-# luchtdichtheid = 1.225 # kilogram per kubieke meter, bij 15C    !!!Add changing air density by height!!!
 temperatuur = 288.15 # kelvin, 15c
 gasconstante = 287.05 # joule per kilogram kelvin. in droge lucht, misschien aanpasbaar met luchtvochtigheid?
-
-#zwaartekracht = valversnelling*rocket_weight
-# k_waarde = .5*luchtdichtheid*rocket_surface*rocket_drag_coefficient
 
 file_adres = 'TSP_D12.csv'
 skip_lines = 4
 
-def generate_moter_curve(file_adres, skip_lines):  # !!!Average is 12 Ns, about 7N ): so not right!!!
+def generate_moter_curve(file_adres, skip_lines):
     data = pd.read_csv(file_adres, skiprows=skip_lines)
 
     time = data['Time (s)'].to_numpy()
@@ -45,7 +38,7 @@ def calc_k (p, A, cd):
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def plot_height (x, y , mass, g, d1, t1, R, T, A, cd, dt=0.1, ):
+def plot_height (x, y , mass, g, R, T, A, cd, dt=0.01, ):
     hcalc = []
     tcalc = []
 
@@ -53,7 +46,10 @@ def plot_height (x, y , mass, g, d1, t1, R, T, A, cd, dt=0.1, ):
     v = 0
     t = 0
     burned_weight = 0
-    total = d1*t1
+    total = 0
+    for i in range(int(x[-1]/dt)):
+        total += np.interp(i*dt, x, y)
+    print(total)
     check = False
     while h >= 0:
         # using RK4 would be better than this simple version of eulors function
@@ -67,7 +63,7 @@ def plot_height (x, y , mass, g, d1, t1, R, T, A, cd, dt=0.1, ):
         k = calc_k(luchtdichtheid, A, cd)
         fd = calc_drag(k, v)
         burned_weight += fs*dt
-        minus_weight = burned_weight/total*0.024
+        minus_weight = burned_weight/total*0.024 # 0.024 should be a variable
         fz = g*(mass - minus_weight)
 
         fnorm = fz
@@ -104,4 +100,4 @@ def plot_height (x, y , mass, g, d1, t1, R, T, A, cd, dt=0.1, ):
     plt.show()
 
 x_cords, y_cords = generate_moter_curve(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, rocket_motor_avg, rocket_motor_brandtijd, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient)
