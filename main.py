@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import math
 
 # rocket setup
 rocket_weight = 0.25 # kilogram
@@ -33,15 +32,14 @@ def generate_moter_curve(file_adres, skip_lines):  # !!!Average is 12 Ns, about 
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def plot_height (x, y , mass, k, valversnelling, d1, t1, dt=0.1):
+def plot_height (x, y , mass, k, g, d1, t1, dt=0.1):
     hcalc = []
     tcalc = []
 
     h = 0
     v = 0
     t = 0
-    a = 0
-    xy = 0
+    burned_weight = 0
     total = d1*t1
     check = False
     while h >= 0:
@@ -53,9 +51,9 @@ def plot_height (x, y , mass, k, valversnelling, d1, t1, dt=0.1):
         
         fs = np.interp(t, x, y)
         fd = calc_drag(k, v)
-        xy += fs*dt
-        minus_weight = xy/total*0.024
-        fz = valversnelling*(mass - minus_weight)
+        burned_weight += fs*dt
+        minus_weight = burned_weight/total*0.024
+        fz = g*(mass - minus_weight)
 
         fnorm = fz
         if fs > fz:
