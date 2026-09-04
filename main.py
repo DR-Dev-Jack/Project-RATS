@@ -38,7 +38,7 @@ def calc_k (p, A, cd):
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def plot_height (x, y , mass, g, R, T, A, cd, dt=0.01, ):
+def plot_height (x, y , mass, g, R, T, A, cd, fuel, dt=0.01):
     hcalc = []
     tcalc = []
 
@@ -63,7 +63,7 @@ def plot_height (x, y , mass, g, R, T, A, cd, dt=0.01, ):
         k = calc_k(luchtdichtheid, A, cd)
         fd = calc_drag(k, v)
         burned_weight += fs*dt
-        minus_weight = burned_weight/total*0.024 # 0.024 should be a variable
+        minus_weight = burned_weight/total * fuel
         fz = g*(mass - minus_weight)
 
         fnorm = fz
@@ -100,4 +100,4 @@ def plot_height (x, y , mass, g, R, T, A, cd, dt=0.01, ):
     plt.show()
 
 x_cords, y_cords = generate_moter_curve(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, fuel_weight)
