@@ -6,7 +6,8 @@ import math
 # rocket setup
 rocket_weight = 0.25 # kilogram
 fuel_weight = 0.024 # still in kilograms
-rocket_drag_coefficient = 0.6 # to be defined
+rocket_drag_coefficient = 0.5 # approximatly
+parachute_drag_coefficient = 0.8 # approximatly
 rocket_surface = 4.42e-3 # vierkante meter
 
 valversnelling = 9.81 # meter per seconde kwadraat
