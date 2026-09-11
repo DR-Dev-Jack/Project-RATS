@@ -6,7 +6,7 @@ import math
 # rocket setup
 rocket_weight = 0.6 # kilogram
 fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
-rocket_drag_coefficient = 0.4 # to be defined
+rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
 rocket_surface = 4.42e-3 # vierkante meter
 
@@ -43,6 +43,9 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
     hcalc = []
     tcalc = []
 
+    h2calc = []
+    t2calc = []
+
     h = 0
     v = 0
     t = 0
@@ -58,14 +61,15 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
 
         tcalc.append(t)
         hcalc.append(h)
+        t2calc.append(t)
+        h2calc.append(v)
 
         fs = np.interp(t, x, y)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g)
-        if t > 6.6:
+        if t > 6.8:
             k = calc_k(luchtdichtheid, A, pcd)
         else:
             k = calc_k(luchtdichtheid, A, rcd)
-
         fd = calc_drag(k, v)
         burned_weight += fs*dt
         minus_weight = burned_weight/total * fuel
@@ -88,6 +92,10 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
     xpoints = np.array(tcalc)
     ypoints = np.array(hcalc)
 
+    x2points = np.array(t2calc)
+    y2points = np.array(h2calc)
+    
+
     plt.subplot(1, 2, 1)
     plt.plot(xpoints, ypoints)
     plt.title("Rocket height curve")
@@ -101,6 +109,13 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
 
     plt.xlabel("time (t)")
     plt.ylabel("power (N)")
+
+    plt.subplot(2, 2, 4)
+    plt.plot(x2points, y2points)
+    plt.title("Rocket velocity curve")
+
+    plt.xlabel("time (t)")
+    plt.ylabel("velocity (m/s)")
 
     plt.show()
 
