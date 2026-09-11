@@ -12,7 +12,7 @@ parachute_surface = 1.59*10**-1 # vierkante meter, bij diameter van 45cm
 
 #fuel setup
 fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
-brandtijd = 1.8 # seconden
+brandtijd = 2.2 # seconden
 delaytime = 5.0 # seconden
 
 #natuur constante
