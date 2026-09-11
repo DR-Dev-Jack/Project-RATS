@@ -4,7 +4,7 @@ import pandas as pd
 import math
 
 # rocket setup
-rocket_weight = 0.6 # kilogram
+rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket
 fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
