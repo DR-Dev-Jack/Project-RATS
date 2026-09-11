@@ -4,16 +4,16 @@ import pandas as pd
 import math
 
 # rocket setup
-rocket_weight = 0.25 # kilogram
-fuel_weight = 0.024 # still in kilograms
-rocket_drag_coefficient = 0.6 # to be defined
+rocket_weight = 0.6 # kilogram
+fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
+rocket_drag_coefficient = 0.4 # to be defined
 rocket_surface = 4.42e-3 # vierkante meter
 
 valversnelling = 9.81 # meter per seconde kwadraat
 temperatuur = 288.15 # kelvin, Celcuis is T - 273.15
 gasconstante = 287.05 # joule per kilogram kelvin
 
-file_adres = 'TSP_D12.csv'
+file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
 skip_lines = 4
 
 def generate_moter_curve(file_adres, skip_lines):
