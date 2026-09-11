@@ -23,7 +23,7 @@ gasconstante = 287.05 # joule per kilogram kelvin
 file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
 skip_lines = 4
 
-def generate_moter_curve(adress, skip):
+def read_motor_curve_file(adress, skip):
     data = pd.read_csv(adress, skiprows=skip)
 
     time = data['Time (s)'].to_numpy()
@@ -125,5 +125,5 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
 
     plt.show()
 
-x_cords, y_cords = generate_moter_curve(file_adres, skip_lines)
+x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
 plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
