@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import openmeteo_requests
+import requests_cache
+from retry_requests import retry
 import math
 
 # rocket setup
@@ -23,6 +26,25 @@ gasconstante = 287.05 # joule per kilogram kelvin
 
 file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
 skip_lines = 4
+
+api_acces_point = "https://api.open-meteo.com/v1/forecast"
+location_and_etc = {
+    "latitude": 52.36,
+    "longitude": 4.92,
+    "current": "temperature_2m",
+}
+
+def get_live_data(url, params):
+    cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
+    retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
+    openmeteo = openmeteo_requests.Client(session = retry_session)
+    responses = openmeteo.weather_api(url, params = params)
+    response = responses[0]
+    current = response.Current()
+    current_temperature_2m = current.Variables(0).Value()
+    temprature_in_kelvin = current_temperature_2m + 273.15
+    print("tempratuur: ", temprature_in_kelvin)
+    return temprature_in_kelvin
 
 def read_motor_curve_file(adress, skip):
     data = pd.read_csv(adress, skiprows=skip)
@@ -126,5 +148,12 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
 
     plt.show()
 
+temperatuur = get_live_data(api_acces_point, location_and_etc)
 x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
 plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
+
+
+# todo:
+# De invloed van de stuwstraal op de basis-luchtweerstand (Base Drag)
+#  De Barometrische Hoogteformule (In de troposfeer daalt de temperatuur echter lineair met -0,0065 °C per meter)
+# Afname van de zwaartekracht met de hoogte
