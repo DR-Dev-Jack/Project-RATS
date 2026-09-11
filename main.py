@@ -7,6 +7,7 @@ import math
 rocket_weight = 0.6 # kilogram
 fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
 rocket_drag_coefficient = 0.4 # to be defined
+parachute_drag_coefficient = 0.8 # approximatly
 rocket_surface = 4.42e-3 # vierkante meter
 
 valversnelling = 9.81 # meter per seconde kwadraat
@@ -16,8 +17,8 @@ gasconstante = 287.05 # joule per kilogram kelvin
 file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
 skip_lines = 4
 
-def generate_moter_curve(file_adres, skip_lines):
-    data = pd.read_csv(file_adres, skiprows=skip_lines)
+def generate_moter_curve(adress, skip):
+    data = pd.read_csv(adress, skiprows=skip)
 
     time = data['Time (s)'].to_numpy()
     thrust = data['Thrust (N)'].to_numpy()
@@ -38,7 +39,7 @@ def calc_k (p, A, cd):
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def plot_height (x, y , mass, g, R, T, A, cd, fuel, dt=0.01):
+def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
     hcalc = []
     tcalc = []
 
@@ -60,7 +61,11 @@ def plot_height (x, y , mass, g, R, T, A, cd, fuel, dt=0.01):
 
         fs = np.interp(t, x, y)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g)
-        k = calc_k(luchtdichtheid, A, cd)
+        if t > 6.6:
+            k = calc_k(luchtdichtheid, A, pcd)
+        else:
+            k = calc_k(luchtdichtheid, A, rcd)
+
         fd = calc_drag(k, v)
         burned_weight += fs*dt
         minus_weight = burned_weight/total * fuel
@@ -100,4 +105,4 @@ def plot_height (x, y , mass, g, R, T, A, cd, fuel, dt=0.01):
     plt.show()
 
 x_cords, y_cords = generate_moter_curve(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, fuel_weight)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight)
