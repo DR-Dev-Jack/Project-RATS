@@ -5,11 +5,17 @@ import math
 
 # rocket setup
 rocket_weight = 0.6 # kilogram
-fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
-rocket_surface = 4.42e-3 # vierkante meter
+rocket_surface = 4.42e-3 # vierkante meter, bij diameter van 75mm
+parachute_surface = 1.59*10**-1 # vierkante meter, bij diameter van 45cm
 
+#fuel setup
+fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
+brandtijd = 1.8 # seconden
+delaytime = 5.0 # seconden
+
+#natuur constante
 valversnelling = 9.81 # meter per seconde kwadraat
 temperatuur = 288.15 # kelvin, Celcuis is T - 273.15
 gasconstante = 287.05 # joule per kilogram kelvin
@@ -39,11 +45,11 @@ def calc_k (p, A, cd):
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
+def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.01):
     hcalc = []
     tcalc = []
 
-    h2calc = []
+    vcalc = []
     t2calc = []
 
     h = 0
@@ -53,7 +59,7 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
     total = 0
     for i in range(int(x[-1]/dt)):
         total += np.interp(i*dt, x, y)
-    print(total)
+
     check = False
     while h >= 0:
         # using RK4 would be better than this simple version of eulors function
@@ -62,14 +68,14 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
         tcalc.append(t)
         hcalc.append(h)
         t2calc.append(t)
-        h2calc.append(v)
+        vcalc.append(v)
 
         fs = np.interp(t, x, y)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g)
-        if t > 6.8:
-            k = calc_k(luchtdichtheid, A, pcd)
+        if t > bt+delay:
+            k = calc_k(luchtdichtheid, Ar+Ap, rcd+pcd)
         else:
-            k = calc_k(luchtdichtheid, A, rcd)
+            k = calc_k(luchtdichtheid, Ar, rcd)
         fd = calc_drag(k, v)
         burned_weight += fs*dt
         minus_weight = burned_weight/total * fuel
@@ -93,7 +99,7 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
     ypoints = np.array(hcalc)
 
     x2points = np.array(t2calc)
-    y2points = np.array(h2calc)
+    y2points = np.array(vcalc)
     
 
     plt.subplot(1, 2, 1)
@@ -120,4 +126,4 @@ def plot_height (x, y , mass, g, R, T, A, rcd, pcd,fuel, dt=0.01):
     plt.show()
 
 x_cords, y_cords = generate_moter_curve(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
