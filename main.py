@@ -74,7 +74,7 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
         fs = np.interp(t, x, y)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g)
         if t > bt+delay:
-            k = calc_k(luchtdichtheid, Ar+Ap, rcd+pcd)
+            k = calc_k(luchtdichtheid, Ap, pcd)
         else:
             k = calc_k(luchtdichtheid, Ar, rcd)
         fd = calc_drag(k, v)
@@ -91,7 +91,7 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
 
         fn = fs + fnorm - fz - fd
 
-        a = fn / mass
+        a = fn / (mass-minus_weight)
         v += a*dt
 
         t += dt
