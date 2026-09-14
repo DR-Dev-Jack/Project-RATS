@@ -21,7 +21,7 @@ delaytime = 5.0 # seconden
 
 #natuur constante
 valversnelling = 9.81 # meter per seconde kwadraat
-temperatuur = 288.15 # kelvin, Celcuis is T - 273.15
+#temperatuur = 288.15 # kelvin, Celcuis is T - 273.15
 gasconstante = 287.05 # joule per kilogram kelvin
 
 file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
