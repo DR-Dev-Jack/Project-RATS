@@ -103,7 +103,8 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
         fd = calc_drag(k, v)
         burned_weight += fs*dt
         minus_weight = burned_weight/total * fuel
-        fz = g*(mass - minus_weight)
+
+        fz = 6.67e-11*(((mass - minus_weight)*5.97e24)/(6.364844e6+h)**2) #Fz=gravitatieconstante⋅(massa van de aarde⋅massa van het object)/afstand tot het midden van de aarde
 
         fnorm = fz
         if fs > fz:
@@ -152,9 +153,3 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
 temperatuur = get_live_data(api_acces_point, location_and_etc)
 x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
 plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
-
-
-# todo:
-# De invloed van de stuwstraal op de basis-luchtweerstand (Base Drag)
-#  De Barometrische Hoogteformule (In de troposfeer daalt de temperatuur echter lineair met -0,0065 °C per meter)
-# Afname van de zwaartekracht met de hoogte
