@@ -57,8 +57,9 @@ def read_motor_curve_file(adress, skip):
 def calc_luchtdichtheid(R, T, h, g):
     M = float(2.9*10**-2)
     Po= 101325.0
-    presure_at_height = Po * math.e**((-1.0 * M*g*h)/(R*T))
-    luchtdichtheid = presure_at_height/(R*T)
+    t_op_hoogte = T-(6.5e-3*h)
+    presure_at_height = Po * math.e**((-1.0 * M*g*h)/(R*t_op_hoogte))
+    luchtdichtheid = presure_at_height/(R*t_op_hoogte)
 
     return luchtdichtheid
 
