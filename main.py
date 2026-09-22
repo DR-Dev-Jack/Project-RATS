@@ -8,7 +8,6 @@ import math
 
 # rocket setup
 rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket
-fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
 rocket_surface = 4.42e-3 # vierkante meter, bij diameter van 75mm
@@ -24,13 +23,17 @@ valversnelling = 9.81 # meter per seconde kwadraat
 #temperatuur = 288.15 # kelvin, Celcuis is T - 273.15
 gasconstante = 287.05 # joule per kilogram kelvin
 
+# locatie
+latitude = 52.36
+longitude = 4.92
+
 file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
 skip_lines = 4
 
 api_acces_point = "https://api.open-meteo.com/v1/forecast"
 location_and_etc = {
-    "latitude": 52.36,
-    "longitude": 4.92,
+    "latitude": latitude,
+    "longitude": longitude,
     "current": "temperature_2m",
 }
 
