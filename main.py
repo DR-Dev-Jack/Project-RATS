@@ -24,8 +24,12 @@ valversnelling = 9.81 # meter per seconde kwadraat
 gasconstante = 287.05 # joule per kilogram kelvin
 
 # locatie
-latitude = 52.36 # 24.58
-longitude = 4.92 # 13.21 voor woestijn
+# school
+latitude = 52.36
+longitude = 4.92
+# woestijn
+# latitude = 24.58
+# longitude = 13.21
 
 file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
 skip_lines = 4
