@@ -24,8 +24,12 @@ valversnelling = 9.81 # meter per seconde kwadraat
 gasconstante = 287.05 # joule per kilogram kelvin
 
 # locatie
+# school
 latitude = 52.36
 longitude = 4.92
+# woestijn
+# latitude = 24.58
+# longitude = 13.21
 
 file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
 skip_lines = 4
@@ -34,7 +38,7 @@ api_acces_point = "https://api.open-meteo.com/v1/forecast"
 location_and_etc = {
     "latitude": latitude,
     "longitude": longitude,
-    "current": ["temperature_2m", "wind_speed_10m", "wind_direction_10m"],
+    "current": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "surface_pressure"],
     "wind_speed_unit": "ms",
 }
 
@@ -48,11 +52,14 @@ def get_live_data(url, params):
     current_temperature_2m = current.Variables(0).Value()
     current_wind_speed_10m = current.Variables(1).Value()
     current_wind_direction_10m = current.Variables(2).Value()
+    current_surface_pressure = current.Variables(3).Value()
     temprature_in_kelvin = current_temperature_2m + 273.15
+    pressure_in_pascal = current_surface_pressure * 100
     print("tempratuur: ", temprature_in_kelvin)
     print("wind speed: ", current_wind_speed_10m)
     print("wind direction: ", current_wind_direction_10m)
-    return temprature_in_kelvin, current_wind_speed_10m
+    print("pressure: ", current_surface_pressure)
+    return temprature_in_kelvin, current_wind_speed_10m, pressure_in_pascal
 
 def read_motor_curve_file(adress, skip):
     data = pd.read_csv(adress, skiprows=skip)
@@ -62,9 +69,8 @@ def read_motor_curve_file(adress, skip):
 
     return time, thrust
 
-def calc_luchtdichtheid(R, T, h, g):
+def calc_luchtdichtheid(R, T, h, g, Po):
     M = float(2.9*10**-2)
-    Po= 101325.0
     t_op_hoogte = T-(6.5e-3*h)
     presure_at_height = Po * m.e**((-1.0 * M*g*h)/(R*t_op_hoogte))
     luchtdichtheid = presure_at_height/(R*t_op_hoogte)
@@ -91,7 +97,7 @@ def calc_angels(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2,
     rocket_pitch += angular_velocity*dt
     return rocket_pitch, angular_velocity
 
-def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, rocket_angle_x=0, dt=0.01):
+def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, rocket_angle_x=0, dt=0.01):
     hcalc = []
     tcalc = []
 
@@ -121,7 +127,7 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
         vcalc.append(t)
 
         fs = np.interp(t, x, y)
-        luchtdichtheid = calc_luchtdichtheid(R, T, h, g)
+        luchtdichtheid = calc_luchtdichtheid(R, T, h, g, pressure)
         if t > bt+delay:
             k = calc_k(luchtdichtheid, Ap, pcd)
         else:
@@ -178,6 +184,6 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
 
     plt.show()
 
-temperatuur, wind_speed = get_live_data(api_acces_point, location_and_etc)
+temperatuur, wind_speed, druk_aan_oppervlakte = get_live_data(api_acces_point, location_and_etc)
 x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, druk_aan_oppervlakte)
