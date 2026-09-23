@@ -4,7 +4,7 @@ import pandas as pd
 import openmeteo_requests
 import requests_cache
 from retry_requests import retry
-import math
+import math as m
 
 # rocket setup
 rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket
@@ -34,7 +34,8 @@ api_acces_point = "https://api.open-meteo.com/v1/forecast"
 location_and_etc = {
     "latitude": latitude,
     "longitude": longitude,
-    "current": "temperature_2m",
+    "current": ["temperature_2m", "wind_speed_10m", "wind_direction_10m"],
+    "wind_speed_unit": "ms",
 }
 
 def get_live_data(url, params):
@@ -45,9 +46,13 @@ def get_live_data(url, params):
     response = responses[0]
     current = response.Current()
     current_temperature_2m = current.Variables(0).Value()
+    current_wind_speed_10m = current.Variables(1).Value()
+    current_wind_direction_10m = current.Variables(2).Value()
     temprature_in_kelvin = current_temperature_2m + 273.15
     print("tempratuur: ", temprature_in_kelvin)
-    return temprature_in_kelvin
+    print("wind speed: ", current_wind_speed_10m)
+    print("wind direction: ", current_wind_direction_10m)
+    return temprature_in_kelvin, current_wind_speed_10m
 
 def read_motor_curve_file(adress, skip):
     data = pd.read_csv(adress, skiprows=skip)
@@ -61,18 +66,32 @@ def calc_luchtdichtheid(R, T, h, g):
     M = float(2.9*10**-2)
     Po= 101325.0
     t_op_hoogte = T-(6.5e-3*h)
-    presure_at_height = Po * math.e**((-1.0 * M*g*h)/(R*t_op_hoogte))
+    presure_at_height = Po * m.e**((-1.0 * M*g*h)/(R*t_op_hoogte))
     luchtdichtheid = presure_at_height/(R*t_op_hoogte)
 
     return luchtdichtheid
 
 def calc_k (p, A, cd):
-    return .5*p*A*cd
+    return .5*p*A*cd #p is luchtdichtheid, A is oppervlak, cd is drag coefficient
 
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.01):
+def calc_angels(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
+    target_angle = m.atan2(rocket_speed, wind_speed)
+    angle_error = rocket_pitch - target_angle
+    k = calc_k(p, A, cd)
+    Fwind = wind_speed**2 * k * angle_error
+    I = 1/12*mass*lenght**2
+    Torque = -Fwind * d # d should be the distance from the center of mass to the point where the force is applied
+    torque_dampening = angular_velocity * 0.3 # 0.3 is an estimate
+    torque_total = Torque-torque_dampening
+    angular_acceleration = torque_total/I
+    angular_velocity += angular_acceleration*dt
+    rocket_pitch += angular_velocity*dt
+    return rocket_pitch, angular_velocity
+
+def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, rocket_angle_x=0, dt=0.01):
     hcalc = []
     tcalc = []
 
@@ -84,6 +103,10 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
     t = 0
     burned_weight = 0
     total = 0
+
+    rP = 0
+    aV = 0
+    counter = 0
     for i in range(int(x[-1]/dt)):
         total += np.interp(i*dt, x, y)
 
@@ -94,8 +117,8 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
 
         tcalc.append(t)
         hcalc.append(h)
-        t2calc.append(t)
-        vcalc.append(v)
+        t2calc.append(rP*57.3)
+        vcalc.append(t)
 
         fs = np.interp(t, x, y)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g)
@@ -116,12 +139,14 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
         if check:
             fnorm = 0
 
-        fn = fs + fnorm - fz - fd
+        fn = fs*m.cos(rocket_angle_x) + fnorm - fz - fd*m.cos(rocket_angle_x)
 
         a = fn / (mass-minus_weight)
         v += a*dt
 
         t += dt
+
+        rP, aV= calc_angels(rP, aV, current_wind, v)
 
     xpoints = np.array(tcalc)
     ypoints = np.array(hcalc)
@@ -148,11 +173,11 @@ def plot_height (x, y , mass, g, R, T, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.0
     plt.plot(x2points, y2points)
     plt.title("Rocket velocity curve")
 
-    plt.xlabel("time (t)")
-    plt.ylabel("velocity (m/s)")
+    plt.xlabel("degree from orgin")
+    plt.ylabel("time in seconds")
 
     plt.show()
 
-temperatuur = get_live_data(api_acces_point, location_and_etc)
+temperatuur, wind_speed = get_live_data(api_acces_point, location_and_etc)
 x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
