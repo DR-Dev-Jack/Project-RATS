@@ -55,7 +55,7 @@ def get_live_data(url, params):
     current_surface_pressure = current.Variables(3).Value()
     temprature_in_kelvin = current_temperature_2m + 273.15
     pressure_in_pascal = current_surface_pressure * 100
-    print("tempratuur: ", temprature_in_kelvin)
+    print("tempratuur: ", current_temperature_2m)
     print("wind speed: ", current_wind_speed_10m)
     print("wind direction: ", current_wind_direction_10m)
     print("pressure: ", current_surface_pressure)
@@ -88,7 +88,7 @@ def calc_angels(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2,
     angle_error = rocket_pitch - target_angle
     k = calc_k(p, A, cd)
     Fwind = wind_speed**2 * k * angle_error
-    I = 1/12*mass*lenght**2
+    I = 1/12*mass*lenght**2 # traagsheidsmoment
     Torque = -Fwind * d # d should be the distance from the center of mass to the point where the force is applied
     torque_dampening = angular_velocity * 0.3 # 0.3 is an estimate
     torque_total = Torque-torque_dampening
