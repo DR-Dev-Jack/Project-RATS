@@ -97,15 +97,19 @@ def calc_angels(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2,
     rocket_pitch += angular_velocity*dt
     return rocket_pitch, angular_velocity, Fwind
 
-def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
+def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
     hcalc = []
+    vcalc = []
+    xcalc = []
     tcalc = []
 
-    vcalc = []
-    t2calc = []
+
 
     h = 0
-    v = 0
+    x = 0
+    # v = 0
+    vh = 0
+    vx = 0
     t = 0
     burned_weight = 0
     total = 0
@@ -114,26 +118,27 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
     aV = 0
     Fwind = 0
 
-    for i in range(int(x[-1]/dt)):
-        total += np.interp(i*dt, x, y)
+    for i in range(int(newton_time[-1]/dt)):
+        total += np.interp(i*dt, newton_time, newton)
 
     check = False
     while h >= 0:
         # using RK4 would be better than this simple version of eulors function
-        h += v*dt
+        h += vh*dt
+        x += vx*dt
 
         tcalc.append(t)
         hcalc.append(h)
-        t2calc.append(m.degrees(rP))
-        vcalc.append(t)
+        xcalc.append(x)
+        vcalc.append(vh)
 
-        fs = np.interp(t, x, y)
+        fs = np.interp(t, newton_time, newton)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g, pressure)
         if t > bt+delay:
             k = calc_k(luchtdichtheid, Ap, pcd)
         else:
             k = calc_k(luchtdichtheid, Ar, rcd)
-        fd = calc_drag(k, v)
+        fd = calc_drag(k, vh)
         burned_weight += fs*dt
         minus_weight = burned_weight/total * fuel
 
@@ -146,21 +151,30 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
         if check:
             fnorm = 0
 
-        fn = fs*m.cos(rP) + fnorm + Fwind*m.cos(m.radians(90)) - fz - fd*m.cos(rP)
+        fsd = fs - fd
+        fnx =  fsd*m.sin(rP) + Fwind
+        fnh = fsd*m.cos(rP) + fnorm - fz
 
-        a = fn / (mass-minus_weight)
-        v += a*dt
+        ah = fnh / (mass-minus_weight)
+        vh += ah*dt
+
+        ax = fnx / (mass-minus_weight)
+        vx += ax*dt
 
         t += dt
 
-        rP, aV, Fwind = calc_angels(rP, aV, current_wind, v)
+        # v= m.sqrt(vx**2 + vh**2) needs fixing
+
+        rP, aV, Fwind = calc_angels(rP, aV, current_wind, vh)
 
     xpoints = np.array(tcalc)
     ypoints = np.array(hcalc)
 
-    x2points = np.array(t2calc)
-    y2points = np.array(vcalc)
-    
+    x2points = np.array(tcalc)
+    y2points = np.array(xcalc)
+
+    x3points = np.array(tcalc)
+    y3points = np.array(vcalc)
 
     plt.subplot(1, 2, 1)
     plt.plot(xpoints, ypoints)
@@ -170,7 +184,8 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
     plt.ylabel("height (m)")
 
     plt.subplot(2, 2, 2)
-    plt.plot(x,y)
+    #plt.plot(newton_time,newton)
+    plt.plot(x3points, y3points)
     plt.title("Rocket motor output curve")
 
     plt.xlabel("time (t)")
@@ -178,10 +193,10 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
 
     plt.subplot(2, 2, 4)
     plt.plot(x2points, y2points)
-    plt.title("Rocket velocity curve")
+    plt.title("Rocket place curve")
 
-    plt.xlabel("degree from orgin")
-    plt.ylabel("time in seconds")
+    plt.xlabel("time (s)")
+    plt.ylabel("Meter (s)")
 
     plt.show()
 
