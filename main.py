@@ -163,8 +163,6 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
 
         t += dt
 
-        # v= m.sqrt(vx**2 + vh**2) needs fixing
-
         rP, aV, Fwind = calc_angels(rP, aV, current_wind, vh)
 
     xpoints = np.array(tcalc)
