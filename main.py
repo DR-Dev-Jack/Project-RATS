@@ -59,7 +59,7 @@ def get_live_data(url, params):
     print("wind speed: ", current_wind_speed_10m)
     print("wind direction: ", current_wind_direction_10m)
     print("pressure: ", current_surface_pressure)
-    return temprature_in_kelvin, current_wind_speed_10m, pressure_in_pascal
+    return temprature_in_kelvin, current_wind_speed_10m, pressure_in_pascal, current_wind_direction_10m
 
 def read_motor_curve_file(adress, skip):
     data = pd.read_csv(adress, skiprows=skip)
@@ -83,7 +83,37 @@ def calc_k (p, A, cd):
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def calc_angels(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
+def calc_angels_y(rocket_pitchy, angular_velocity_y, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
+    target_angle = m.atan2(rocket_speed, wind_speed)
+    angle_error = rocket_pitchy - target_angle
+    k = calc_k(p, A, cd)
+    wind_speed_y = wind_speed * m.cos(m.radians(wind_direction))
+    Fwindy = wind_speed_y**2 * k * angle_error
+    I = 1/12*mass*lenght**2 # traagsheidsmoment
+    Torque = -Fwindy * d # d should be the distance from the center of mass to the point where the force is applied
+    torque_dampening = angular_velocity_y * 0.3 # 0.3 is an estimate
+    torque_total = Torque-torque_dampening
+    angular_acceleration = torque_total/I
+    angular_velocity_y += angular_acceleration*dt
+    rocket_pitchy += angular_velocity_y*dt
+    return rocket_pitchy, angular_velocity_y, Fwindy
+
+def calc_angels_x(rocket_pitchx, angular_velocityx, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
+    target_angle = m.atan2(rocket_speed, wind_speed)
+    angle_error = rocket_pitchx - target_angle
+    k = calc_k(p, A, cd)
+    wind_speed_x = wind_speed * m.sin(m.radians(wind_direction))
+    Fwindx = wind_speed_x**2 * k * angle_error
+    I = 1/12*mass*lenght**2 # traagsheidsmoment
+    Torque = -Fwindx * d # d should be the distance from the center of mass to the point where the force is applied
+    torque_dampening = angular_velocityx * 0.3 # 0.3 is an estimate
+    torque_total = Torque-torque_dampening
+    angular_acceleration = torque_total/I
+    angular_velocityx += angular_acceleration*dt
+    rocket_pitchx += angular_velocityx*dt
+    return rocket_pitchx, angular_velocityx, Fwindx
+
+def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
     target_angle = m.atan2(rocket_speed, wind_speed)
     angle_error = rocket_pitch - target_angle
     k = calc_k(p, A, cd)
@@ -95,28 +125,33 @@ def calc_angels(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2,
     angular_acceleration = torque_total/I
     angular_velocity += angular_acceleration*dt
     rocket_pitch += angular_velocity*dt
-    return rocket_pitch, angular_velocity, Fwind
+    return rocket_pitch, angular_velocity
 
-def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
+def plot_height (newton_time, newton , mass, g, R, T, current_wind, current_wind_direction, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
     hcalc = []
-    vcalc = []
+    # vcalc = []
     xcalc = []
+    ycalc = []
     tcalc = []
-
-
 
     h = 0
     x = 0
-    # v = 0
+    y = 0
     vh = 0
     vx = 0
+    vy = 0
     t = 0
     burned_weight = 0
     total = 0
 
     rP = 0
+    rPx = 0
+    rPy = 0
     aV = 0
-    Fwind = 0
+    aVx = 0
+    aVy = 0
+    Fwindx = 0
+    Fwindy = 0
 
     for i in range(int(newton_time[-1]/dt)):
         total += np.interp(i*dt, newton_time, newton)
@@ -126,11 +161,12 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
         # using RK4 would be better than this simple version of eulors function
         h += vh*dt
         x += vx*dt
+        y += vy*dt
 
         tcalc.append(t)
         hcalc.append(h)
         xcalc.append(x)
-        vcalc.append(vh)
+        ycalc.append(y)
 
         fs = np.interp(t, newton_time, newton)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g, pressure)
@@ -152,7 +188,8 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
             fnorm = 0
 
         fsd = fs - fd
-        fnx =  fsd*m.sin(rP) + Fwind
+        fnx =  fsd*m.sin(rPx) + Fwindx
+        fny = fsd*m.sin(rPy) + Fwindy
         fnh = fsd*m.cos(rP) + fnorm - fz
 
         ah = fnh / (mass-minus_weight)
@@ -161,9 +198,16 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
         ax = fnx / (mass-minus_weight)
         vx += ax*dt
 
+        ay = fny / (mass-minus_weight)
+        vy += ay*dt
+
         t += dt
 
-        rP, aV, Fwind = calc_angels(rP, aV, current_wind, vh)
+        rPy, aVy, Fwindy = calc_angels_y(rPy,aVy, current_wind,vh)
+        rPx, aVx, Fwindx = calc_angels_x(rPx, aVx, current_wind, vh)
+        rP, aV = calc_pitch(rP, aV, current_wind, vh)
+
+
 
     xpoints = np.array(tcalc)
     ypoints = np.array(hcalc)
@@ -172,7 +216,7 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
     y2points = np.array(xcalc)
 
     x3points = np.array(tcalc)
-    y3points = np.array(vcalc)
+    y3points = np.array(ycalc)
 
     plt.subplot(1, 2, 1)
     plt.plot(xpoints, ypoints)
@@ -187,17 +231,17 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
     plt.title("Rocket motor output curve")
 
     plt.xlabel("time (t)")
-    plt.ylabel("power (N)")
+    plt.ylabel("y (m)")
 
     plt.subplot(2, 2, 4)
     plt.plot(x2points, y2points)
     plt.title("Rocket place curve")
 
     plt.xlabel("time (s)")
-    plt.ylabel("Meter (s)")
+    plt.ylabel("x (m)")
 
     plt.show()
 
-temperatuur, wind_speed, druk_aan_oppervlakte = get_live_data(api_acces_point, location_and_etc)
+temperatuur, wind_speed, druk_aan_oppervlakte, wind_direction = get_live_data(api_acces_point, location_and_etc)
 x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, druk_aan_oppervlakte)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, wind_direction,rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, druk_aan_oppervlakte)
