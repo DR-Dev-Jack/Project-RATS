@@ -95,9 +95,9 @@ def calc_angels(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2,
     angular_acceleration = torque_total/I
     angular_velocity += angular_acceleration*dt
     rocket_pitch += angular_velocity*dt
-    return rocket_pitch, angular_velocity
+    return rocket_pitch, angular_velocity, Fwind
 
-def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, rocket_angle_x=0, dt=0.01):
+def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
     hcalc = []
     tcalc = []
 
@@ -112,7 +112,8 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
 
     rP = 0
     aV = 0
-    counter = 0
+    Fwind = 0
+
     for i in range(int(x[-1]/dt)):
         total += np.interp(i*dt, x, y)
 
@@ -123,7 +124,7 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
 
         tcalc.append(t)
         hcalc.append(h)
-        t2calc.append(rP*57.3)
+        t2calc.append(m.degrees(rP))
         vcalc.append(t)
 
         fs = np.interp(t, x, y)
@@ -145,14 +146,14 @@ def plot_height (x, y , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, del
         if check:
             fnorm = 0
 
-        fn = fs*m.cos(rocket_angle_x) + fnorm - fz - fd*m.cos(rocket_angle_x)
+        fn = fs*m.cos(rP) + fnorm + Fwind*m.cos(m.radians(90)) - fz - fd*m.cos(rP)
 
         a = fn / (mass-minus_weight)
         v += a*dt
 
         t += dt
 
-        rP, aV= calc_angels(rP, aV, current_wind, v)
+        rP, aV, Fwind = calc_angels(rP, aV, current_wind, v)
 
     xpoints = np.array(tcalc)
     ypoints = np.array(hcalc)
