@@ -240,6 +240,12 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, current_wind
     plt.xlabel("time (s)")
     plt.ylabel("x (m)")
 
+    plt.figure()
+    _3Dplot = plt.axes(projection='3d')
+    _3Dplot.plot3D(y2points, y3points, ypoints, 'green')
+    equal_size = max(y2points)/max(y3points)
+    _3Dplot.set_box_aspect((equal_size, 1, 1))
+
     plt.show()
 
 temperatuur, wind_speed, druk_aan_oppervlakte, wind_direction = get_live_data(api_acces_point, location_and_etc)
