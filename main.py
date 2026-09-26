@@ -83,41 +83,23 @@ def calc_k (p, A, cd):
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def calc_angels_y(rocket_pitchy, angular_velocity_y, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
-    target_angle = m.atan2(rocket_speed, wind_speed)
-    angle_error = rocket_pitchy - target_angle
-    k = calc_k(p, A, cd)
-    wind_speed_y = wind_speed * m.cos(m.radians(wind_direction))
-    Fwindy = wind_speed_y**2 * k * angle_error
-    I = 1/12*mass*lenght**2 # traagsheidsmoment
-    Torque = -Fwindy * d # d should be the distance from the center of mass to the point where the force is applied
-    torque_dampening = angular_velocity_y * 0.3 # 0.3 is an estimate
-    torque_total = Torque-torque_dampening
-    angular_acceleration = torque_total/I
-    angular_velocity_y += angular_acceleration*dt
-    rocket_pitchy += angular_velocity_y*dt
-    return rocket_pitchy, angular_velocity_y, Fwindy
+def calc_speed(fsd, rP, Fext, mass, gonimetri):
+    if gonimetri == "sin":
+        fn = fsd*m.sin(rP) + Fext
+    else:
+        fn = fsd*m.cos(rP) + Fext
+    return fn/mass
 
-def calc_angels_x(rocket_pitchx, angular_velocityx, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
-    target_angle = m.atan2(rocket_speed, wind_speed)
-    angle_error = rocket_pitchx - target_angle
-    k = calc_k(p, A, cd)
-    wind_speed_x = wind_speed * m.sin(m.radians(wind_direction))
-    Fwindx = wind_speed_x**2 * k * angle_error
-    I = 1/12*mass*lenght**2 # traagsheidsmoment
-    Torque = -Fwindx * d # d should be the distance from the center of mass to the point where the force is applied
-    torque_dampening = angular_velocityx * 0.3 # 0.3 is an estimate
-    torque_total = Torque-torque_dampening
-    angular_acceleration = torque_total/I
-    angular_velocityx += angular_acceleration*dt
-    rocket_pitchx += angular_velocityx*dt
-    return rocket_pitchx, angular_velocityx, Fwindx
-
-def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
+def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, direction, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
     target_angle = m.atan2(rocket_speed, wind_speed)
     angle_error = rocket_pitch - target_angle
     k = calc_k(p, A, cd)
-    Fwind = wind_speed**2 * k * angle_error
+    if direction == "x":
+        wind_speed *= m.sin(m.radians(wind_direction))
+    elif direction == "y":
+        wind_speed *= m.cos(m.radians(wind_direction))
+    
+    Fwind = wind_speed**2 * k * angle_error #special!!!
     I = 1/12*mass*lenght**2 # traagsheidsmoment
     Torque = -Fwind * d # d should be the distance from the center of mass to the point where the force is applied
     torque_dampening = angular_velocity * 0.3 # 0.3 is an estimate
@@ -125,33 +107,12 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, p=1.2, 
     angular_acceleration = torque_total/I
     angular_velocity += angular_acceleration*dt
     rocket_pitch += angular_velocity*dt
-    return rocket_pitch, angular_velocity
+    return rocket_pitch, angular_velocity, Fwind
 
-def plot_height (newton_time, newton , mass, g, R, T, current_wind, current_wind_direction, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
-    hcalc = []
-    # vcalc = []
-    xcalc = []
-    ycalc = []
-    tcalc = []
-
-    h = 0
-    x = 0
-    y = 0
-    vh = 0
-    vx = 0
-    vy = 0
-    t = 0
-    burned_weight = 0
-    total = 0
-
-    rP = 0
-    rPx = 0
-    rPy = 0
-    aV = 0
-    aVx = 0
-    aVy = 0
-    Fwindx = 0
-    Fwindy = 0
+def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
+    hcalc, xcalc, ycalc, tcalc = [], [], [], []
+    t = h = x = y = vh = vx = vy = burned_weight = total = 0
+    rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
 
     for i in range(int(newton_time[-1]/dt)):
         total += np.interp(i*dt, newton_time, newton)
@@ -187,25 +148,15 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, current_wind
         if check:
             fnorm = 0
 
-        fsd = fs - fd
-        fnx =  fsd*m.sin(rPx) + Fwindx
-        fny = fsd*m.sin(rPy) + Fwindy
-        fnh = fsd*m.cos(rP) + fnorm - fz
-
-        ah = fnh / (mass-minus_weight)
-        vh += ah*dt
-
-        ax = fnx / (mass-minus_weight)
-        vx += ax*dt
-
-        ay = fny / (mass-minus_weight)
-        vy += ay*dt
+        vh += calc_speed(fs-fd, rP, fnorm-fz, mass-minus_weight, "cos")*dt
+        vx += calc_speed(fs-fd, rPx, Fwindx, mass-minus_weight, "sin")*dt
+        vy += calc_speed(fs-fd, rPy, Fwindy, mass-minus_weight, "sin")*dt
 
         t += dt
 
-        rPy, aVy, Fwindy = calc_angels_y(rPy,aVy, current_wind,vh)
-        rPx, aVx, Fwindx = calc_angels_x(rPx, aVx, current_wind, vh)
-        rP, aV = calc_pitch(rP, aV, current_wind, vh)
+        rPy, aVy, Fwindy = calc_pitch(rPy, aVy, current_wind, vh, "y")
+        rPx, aVx, Fwindx = calc_pitch(rPx, aVx, current_wind, vh, "x")
+        rP, aV, trash = calc_pitch(rP, aV, current_wind, vh, "z")
 
 
 
@@ -243,11 +194,10 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, current_wind
     plt.figure()
     _3Dplot = plt.axes(projection='3d')
     _3Dplot.plot3D(y2points, y3points, ypoints, 'green')
-    equal_size = max(y2points)/max(y3points)
-    _3Dplot.set_box_aspect((equal_size, 1, 1))
+    _3Dplot.set_box_aspect((1, 1, 1))
 
     plt.show()
 
 temperatuur, wind_speed, druk_aan_oppervlakte, wind_direction = get_live_data(api_acces_point, location_and_etc)
 x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, wind_direction,rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, druk_aan_oppervlakte)
+plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, druk_aan_oppervlakte)
