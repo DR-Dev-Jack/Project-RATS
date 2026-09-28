@@ -18,9 +18,8 @@ fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
 brandtijd = 2.2 # seconden
 delaytime = 5.0 # seconden
 
-#natuur constante
+#natuur constantes
 valversnelling = 9.81 # meter per seconde kwadraat
-#temperatuur = 288.15 # kelvin, Celcuis is T - 273.15
 gasconstante = 287.05 # joule per kilogram kelvin
 
 # locatie
@@ -83,20 +82,20 @@ def calc_k (p, A, cd):
 def calc_drag (k, speed):
     return k * speed * abs(speed)
 
-def calc_speed(fsd, rP, Fext, mass, gonimetri):
-    if gonimetri == "sin":
+def calc_speed(fsd, rP, Fext, mass, goniometrie):
+    if goniometrie == "sin":
         fn = fsd*m.sin(rP) + Fext
     else:
         fn = fsd*m.cos(rP) + Fext
     return fn/mass
 
-def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, direction, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
+def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_direction, axis, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
     target_angle = m.atan2(rocket_speed, wind_speed)
     angle_error = rocket_pitch - target_angle
     k = calc_k(p, A, cd)
-    if direction == "x":
+    if axis == "x":
         wind_speed *= m.sin(m.radians(wind_direction))
-    elif direction == "y":
+    elif axis == "y":
         wind_speed *= m.cos(m.radians(wind_direction))
     
     Fwind = wind_speed**2 * k * angle_error #special!!!
@@ -109,10 +108,17 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, directi
     rocket_pitch += angular_velocity*dt
     return rocket_pitch, angular_velocity, Fwind
 
-def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd, fuel, bt, delay, Ap, pressure, dt=0.01):
+def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.01):
     hcalc, xcalc, ycalc, tcalc = [], [], [], []
     t = h = x = y = vh = vx = vy = burned_weight = total = 0
     rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
+
+    newton_time, newton = read_motor_curve_file(file_adres, skip_lines)
+    T, current_wind, pressure, wind_direction = get_live_data(api_acces_point, location_and_etc)
+
+    gravitatie_c = 6.67e-11
+    mass_earth = 5.97e24
+    radius_earth = 6.364844e6
 
     for i in range(int(newton_time[-1]/dt)):
         total += np.interp(i*dt, newton_time, newton)
@@ -131,15 +137,15 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
 
         fs = np.interp(t, newton_time, newton)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g, pressure)
-        if t > bt+delay:
+        if t > bt + delay:
             k = calc_k(luchtdichtheid, Ap, pcd)
         else:
             k = calc_k(luchtdichtheid, Ar, rcd)
         fd = calc_drag(k, vh)
-        burned_weight += fs*dt
-        minus_weight = burned_weight/total * fuel
+        burned_weight += fs * dt
+        minus_weight = burned_weight / total * fuel
 
-        fz = 6.67e-11*(((mass - minus_weight)*5.97e24)/(6.364844e6+h)**2) #Fz=gravitatieconstante⋅(massa van de aarde⋅massa van het object)/afstand tot het midden van de aarde
+        fz = gravitatie_c * (((mass - minus_weight) * mass_earth) / (radius_earth + h) ** 2)
 
         fnorm = fz
         if fs > fz:
@@ -152,22 +158,23 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
         vx += calc_speed(fs-fd, rPx, Fwindx, mass-minus_weight, "sin")*dt
         vy += calc_speed(fs-fd, rPy, Fwindy, mass-minus_weight, "sin")*dt
 
+        rPy, aVy, Fwindy = calc_pitch(rPy, aVy, current_wind, vh, wind_direction,"y")
+        rPx, aVx, Fwindx = calc_pitch(rPx, aVx, current_wind, vh, wind_direction,"x")
+        rP, aV, trash = calc_pitch(rP, aV, current_wind, vh, wind_direction,"z")
+
         t += dt
 
-        rPy, aVy, Fwindy = calc_pitch(rPy, aVy, current_wind, vh, "y")
-        rPx, aVx, Fwindx = calc_pitch(rPx, aVx, current_wind, vh, "x")
-        rP, aV, trash = calc_pitch(rP, aV, current_wind, vh, "z")
+    return hcalc, xcalc, ycalc, tcalc
 
+def plot_graph(h,x,y,t):
+    xpoints = np.array(t)
+    ypoints = np.array(h)
 
+    x2points = np.array(t)
+    y2points = np.array(x)
 
-    xpoints = np.array(tcalc)
-    ypoints = np.array(hcalc)
-
-    x2points = np.array(tcalc)
-    y2points = np.array(xcalc)
-
-    x3points = np.array(tcalc)
-    y3points = np.array(ycalc)
+    x3points = np.array(t)
+    y3points = np.array(y)
 
     plt.subplot(1, 2, 1)
     plt.plot(xpoints, ypoints)
@@ -198,6 +205,5 @@ def plot_height (newton_time, newton , mass, g, R, T, current_wind, Ar, rcd, pcd
 
     plt.show()
 
-temperatuur, wind_speed, druk_aan_oppervlakte, wind_direction = get_live_data(api_acces_point, location_and_etc)
-x_cords, y_cords = read_motor_curve_file(file_adres, skip_lines)
-plot_height(x_cords, y_cords, rocket_weight, valversnelling, gasconstante, temperatuur, wind_speed, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, druk_aan_oppervlakte)
+hcalc, xcalc, ycalc, tcalc = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
+plot_graph(hcalc, xcalc, ycalc, tcalc)
