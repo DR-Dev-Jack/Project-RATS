@@ -8,6 +8,7 @@ import math as m
 
 # rocket setup
 rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket
+rocket_length = 0.6 # meter of 0.15 voor de cartoon rocket
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
 rocket_surface = 4.42e-3 # vierkante meter, bij diameter van 75mm
@@ -89,7 +90,8 @@ def calc_speed(fsd, rP, Fext, mass, goniometrie):
         fn = fsd*m.cos(rP) + Fext
     return fn/mass
 
-def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_direction, axis, p=1.2, A=4.42e-3, cd=0.5, mass=0.6, lenght=0.6, d=0.2, dt=0.01):
+def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_direction, axis, p, A, cd, mass, lenght, dt=0.01):
+    d = lenght/2
     target_angle = m.atan2(rocket_speed, wind_speed)
     angle_error = rocket_pitch - target_angle
     k = calc_k(p, A, cd)
@@ -108,7 +110,7 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_di
     rocket_pitch += angular_velocity*dt
     return rocket_pitch, angular_velocity, Fwind
 
-def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.01):
+def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, dt=0.01):
     hcalc, xcalc, ycalc, tcalc = [], [], [], []
     t = h = x = y = vh = vx = vy = burned_weight = total = 0
     rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
@@ -158,9 +160,9 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, dt=0.01):
         vx += calc_speed(fs-fd, rPx, Fwindx, mass-minus_weight, "sin")*dt
         vy += calc_speed(fs-fd, rPy, Fwindy, mass-minus_weight, "sin")*dt
 
-        rPy, aVy, Fwindy = calc_pitch(rPy, aVy, current_wind, vh, wind_direction,"y")
-        rPx, aVx, Fwindx = calc_pitch(rPx, aVx, current_wind, vh, wind_direction,"x")
-        rP, aV, trash = calc_pitch(rP, aV, current_wind, vh, wind_direction,"z")
+        rPy, aVy, Fwindy = calc_pitch(rPy, aVy, current_wind, vh, wind_direction,"y", luchtdichtheid, Ar, rcd, mass, length)
+        rPx, aVx, Fwindx = calc_pitch(rPx, aVx, current_wind, vh, wind_direction,"x", luchtdichtheid, Ar, rcd, mass, length)
+        rP, aV, trash = calc_pitch(rP, aV, current_wind, vh, wind_direction,"z", luchtdichtheid, Ar, rcd, mass, length)
 
         t += dt
 
@@ -205,5 +207,5 @@ def plot_graph(h,x,y,t):
 
     plt.show()
 
-hcalc, xcalc, ycalc, tcalc = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface)
+hcalc, xcalc, ycalc, tcalc = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
 plot_graph(hcalc, xcalc, ycalc, tcalc)
