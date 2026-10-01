@@ -7,8 +7,8 @@ from retry_requests import retry
 import math as m
 
 # rocket setup
-rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket
-rocket_length = 0.6 # meter of 0.15 voor de cartoon rocket
+rocket_weight = 0.4 # kilogram of 0.15 voor de cartoon rocket
+rocket_length = 0.69 # meter of 0.15 voor de cartoon rocket
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
 rocket_surface = 4.42e-3 # vierkante meter, bij diameter van 75mm
@@ -91,7 +91,7 @@ def calc_speed(fsd, rP, Fext, mass, goniometrie):
     return fn/mass
 
 def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_direction, axis, p, A, cd, mass, lenght, dt=0.01):
-    d = lenght/2
+    d = lenght/4
     target_angle = m.atan2(rocket_speed, wind_speed)
     angle_error = rocket_pitch - target_angle
     k = calc_k(p, A, cd)
@@ -209,3 +209,5 @@ def plot_graph(h,x,y,t):
 
 hcalc, xcalc, ycalc, tcalc = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
 plot_graph(hcalc, xcalc, ycalc, tcalc)
+
+# openrocket barammesh baramflow
