@@ -91,7 +91,7 @@ def calc_speed(fsd, rP, Fext, mass, goniometrie):
     return fn/mass
 
 def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_direction, axis, p, A, cd, mass, lenght, dt=0.01):
-    d = lenght/4
+    d = lenght /2
     target_angle = m.atan2(rocket_speed, wind_speed)
     angle_error = rocket_pitch - target_angle
     k = calc_k(p, A, cd)
