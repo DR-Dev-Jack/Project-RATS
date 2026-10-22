@@ -5,6 +5,7 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 import math as m
+import plotly.express as px
 
 # rocket setup
 rocket_weight = 0.4 # kilogram of 0.15 voor de cartoon rocket
@@ -210,4 +211,13 @@ def plot_graph(h,x,y,t):
 hcalc, xcalc, ycalc, tcalc = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
 plot_graph(hcalc, xcalc, ycalc, tcalc)
 
-# openrocket barammesh baramflow
+print("check")
+df = pd.DataFrame(dict(
+  y =  ycalc,
+  x = xcalc,
+  z = hcalc
+))
+
+fig = px.line_3d(df, x="x", y="y", z = "z", title="Voorbeeld")
+fig.show()
+print("check")
