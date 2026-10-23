@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import openmeteo_requests
@@ -8,12 +7,17 @@ import math as m
 import plotly.express as px
 
 # rocket setup
-rocket_weight = 0.4 # kilogram of 0.15 voor de cartoon rocket
-rocket_length = 0.69 # meter of 0.15 voor de cartoon rocket
+rocket_weight = 0.4 # kilogram of 0.15 voor de cartoon rocket, aanpasbaar
+rocket_length = 0.69 # meter of 0.15 voor de cartoon rocket, aanpasbaar
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
-rocket_surface = 4.42e-3 # vierkante meter, bij diameter van 75mm
-parachute_surface = 1.59*10**-1 # vierkante meter, bij diameter van 45cm
+
+rocket_diameter = 7.5e-2 # diameter in meter aanpasbaar
+parachute_diameter = 4.5e-1 # diameter in meter aanpasbaar
+has_parachute = True #aanpasbaar
+
+rocket_surface = m.pi * (rocket_diameter/2)**2 # eerst 4.42e-3
+parachute_surface = m.pi * (parachute_diameter/2)**2 # eerst 1.59e-1
 
 #fuel setup
 fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
@@ -24,7 +28,7 @@ delaytime = 5.0 # seconden
 valversnelling = 9.81 # meter per seconde kwadraat
 gasconstante = 287.05 # joule per kilogram kelvin
 
-# locatie
+# locatie aanpasbaar
 # school
 latitude = 52.36
 longitude = 4.92
@@ -140,7 +144,7 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, dt=
 
         fs = np.interp(t, newton_time, newton)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g, pressure)
-        if t > bt + delay:
+        if t > bt + delay and has_parachute:
             k = calc_k(luchtdichtheid, Ap, pcd)
         else:
             k = calc_k(luchtdichtheid, Ar, rcd)
@@ -167,57 +171,14 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, dt=
 
         t += dt
 
-    return hcalc, xcalc, ycalc, tcalc
+    return hcalc, xcalc, ycalc
 
-def plot_graph(h,x,y,t):
-    xpoints = np.array(t)
-    ypoints = np.array(h)
+hcalc, xcalc, ycalc= calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
 
-    x2points = np.array(t)
-    y2points = np.array(x)
-
-    x3points = np.array(t)
-    y3points = np.array(y)
-
-    plt.subplot(1, 2, 1)
-    plt.plot(xpoints, ypoints)
-    plt.title("Rocket height curve")
-
-    plt.xlabel("time (t)")
-    plt.ylabel("height (m)")
-
-    plt.subplot(2, 2, 2)
-    #plt.plot(newton_time,newton)
-    plt.plot(x3points, y3points)
-    plt.title("Rocket motor output curve")
-
-    plt.xlabel("time (t)")
-    plt.ylabel("y (m)")
-
-    plt.subplot(2, 2, 4)
-    plt.plot(x2points, y2points)
-    plt.title("Rocket place curve")
-
-    plt.xlabel("time (s)")
-    plt.ylabel("x (m)")
-
-    plt.figure()
-    _3Dplot = plt.axes(projection='3d')
-    _3Dplot.plot3D(y2points, y3points, ypoints, 'green')
-    _3Dplot.set_box_aspect((1, 1, 1))
-
-    plt.show()
-
-hcalc, xcalc, ycalc, tcalc = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
-plot_graph(hcalc, xcalc, ycalc, tcalc)
-
-print("check")
 df = pd.DataFrame(dict(
   y =  ycalc,
   x = xcalc,
   z = hcalc
 ))
 
-fig = px.line_3d(df, x="x", y="y", z = "z", title="Voorbeeld")
-fig.show()
-print("check")
+fig = px.line_3d(df, x="x", y="y", z = "z", title="Positie")
