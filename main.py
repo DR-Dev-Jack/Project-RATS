@@ -5,9 +5,25 @@ import requests_cache
 from retry_requests import retry
 import math as m
 import plotly.express as px
+import streamlit as st
+
+st.write("""
+# My first app
+Hello *world*!
+""")
+
+my_range = range(50,1001)
+
+rocket_weight = st.select_slider(
+    "massa (gram)",
+    options=my_range,
+    value=500
+)
+
+st.write("mass value:", rocket_weight)
 
 # rocket setup
-rocket_weight = 0.4 # kilogram of 0.15 voor de cartoon rocket, aanpasbaar
+# rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket, aanpasbaar
 rocket_length = 0.69 # meter of 0.15 voor de cartoon rocket, aanpasbaar
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
@@ -36,7 +52,7 @@ longitude = 4.92
 # latitude = 24.58
 # longitude = 13.21
 
-file_adres = "TSP_E20.csv"# or 'TSP_D12.csv'
+file_adres = "TSP_E20.csv"# or 'TSP_D12.csv' or 'TSP_F35.csv'
 skip_lines = 4
 
 api_acces_point = "https://api.open-meteo.com/v1/forecast"
@@ -182,3 +198,5 @@ df = pd.DataFrame(dict(
 ))
 
 fig = px.line_3d(df, x="x", y="y", z = "z", title="Positie")
+
+st.plotly_chart(fig)
