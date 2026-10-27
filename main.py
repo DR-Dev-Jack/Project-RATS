@@ -14,16 +14,9 @@ Hello *world*!
 
 my_range = range(50,1001)
 
-rocket_weight = st.select_slider(
-    "massa (gram)",
-    options=my_range,
-    value=500
-)
-
-st.write("mass value:", rocket_weight)
 
 # rocket setup
-# rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket, aanpasbaar
+rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket, aanpasbaar
 rocket_length = 0.69 # meter of 0.15 voor de cartoon rocket, aanpasbaar
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
@@ -187,16 +180,22 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, dt=
 
         t += dt
 
-    return hcalc, xcalc, ycalc
+    df = pd.DataFrame(dict(
+        y=ycalc,
+        x=xcalc,
+        z=hcalc
+    ))
 
-hcalc, xcalc, ycalc= calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
+    fig = px.line_3d(df, x="x", y="y", z="z", title="Positie")
 
-df = pd.DataFrame(dict(
-  y =  ycalc,
-  x = xcalc,
-  z = hcalc
-))
+    return fig
 
-fig = px.line_3d(df, x="x", y="y", z = "z", title="Positie")
+# rocket_weight = st.select_slider(
+#     "massa (gram)",
+#     options=my_range,
+#     value=500, on_change="rerun"
+# )
 
-st.plotly_chart(fig)
+fig = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
+
+st.plotly_chart(fig, use_container_width=True)
