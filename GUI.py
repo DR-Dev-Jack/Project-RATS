@@ -57,6 +57,30 @@ has_parachute = st.toggle(
     value=True,
     disabled=False,
 )
+
+if has_parachute:
+    parachute_diameter = st.slider(
+        "diameter (m)",
+        value=0.45,
+        on_change="rerun",
+        min_value=0.1,
+        max_value=1.0,
+        step=0.05,
+    )
+else:
+    parachute_diameter = st.slider(
+        "diameter (m)",
+        value=0.45,
+        on_change="rerun",
+        min_value=0.1,
+        max_value=1.0,
+        step=0.05,
+        disabled=True,
+    )
+
+
+parachute_surface = m.pi * (parachute_diameter/2)**2 # eerst 1.59e-1
+
 motor_curve_file = st.file_uploader(
     "Upload Motor Curve File", 
     type="csv", 
