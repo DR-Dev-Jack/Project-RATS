@@ -16,9 +16,6 @@ longitude = 4.92
 # latitude = 24.58
 # longitude = 13.21
 
-file_adres = "TSP_E20.csv"# or 'TSP_D12.csv' or 'TSP_F35.csv'
-skip_lines = 4
-
 api_acces_point = "https://api.open-meteo.com/v1/forecast"
 location_and_etc = {
     "latitude": latitude,
@@ -95,7 +92,7 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_di
     rocket_pitch += angular_velocity*dt
     return rocket_pitch, angular_velocity, Fwind
 
-def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, file_adres, dt=0.01):
+def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, file_adres, color, skip_lines, dt=0.01):
     hcalc, xcalc, ycalc, tcalc = [], [], [], []
     t = h = x = y = vh = vx = vy = burned_weight = total = 0
     rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
@@ -157,7 +154,24 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
         z=hcalc
     ))
 
-    fig = px.line_3d(df, x="x", y="y", z="z", title="Positie")
+    fig = px.line_3d(
+        df, x="x", 
+        y="y", 
+        z="z", 
+        title="Positie",
+        color_discrete_sequence=[color],
+    )
 
-    return fig
+    df2 = pd.DataFrame(dict(
+        t=tcalc,
+        h=hcalc,
+    ))
 
+    fig2 = px.line(
+        df2, x="t", 
+        y="h", 
+        title="Hoogte",
+        color_discrete_sequence=[color],
+    )
+
+    return fig, fig2
