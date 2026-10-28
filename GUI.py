@@ -55,8 +55,19 @@ has_parachute = st.toggle(
     value=True,
     disabled=False,
 )
-motor_curve_file = st.file_uploader("Upload Motor Curve File", type="csv", accept_multiple_files=False, on_change="rerun", disabled=True)
+motor_curve_file = st.file_uploader(
+    "Upload Motor Curve File", 
+    type="csv", 
+    accept_multiple_files=False, 
+    # on_change="rerun", 
+)
 
-fig = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute)
+if motor_curve_file is None:
+    motor_curve_file = "TSP_E20.csv" # default file if none is uploaded
+    st.write("Using default: TSP_E20.csv")
+else:
+    st.write("Using uploaded file:", motor_curve_file.name)
+
+fig = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file)
 
 st.plotly_chart(fig, use_container_width=True)

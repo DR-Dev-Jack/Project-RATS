@@ -96,7 +96,7 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_di
     rocket_pitch += angular_velocity*dt
     return rocket_pitch, angular_velocity, Fwind
 
-def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, dt=0.01):
+def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, file_adres, dt=0.01):
     hcalc, xcalc, ycalc, tcalc = [], [], [], []
     t = h = x = y = vh = vx = vy = burned_weight = total = 0
     rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
