@@ -5,7 +5,6 @@ import requests_cache
 from retry_requests import retry
 import math as m
 import plotly.express as px
-import streamlit as st
 
 has_parachute = True #aanpasbaar
 
