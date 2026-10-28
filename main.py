@@ -7,35 +7,7 @@ import math as m
 import plotly.express as px
 import streamlit as st
 
-st.write("""
-# My first app
-Hello *world*!
-""")
-
-my_range = range(50,1001)
-
-
-# rocket setup
-rocket_weight = 0.6 # kilogram of 0.15 voor de cartoon rocket, aanpasbaar
-rocket_length = 0.69 # meter of 0.15 voor de cartoon rocket, aanpasbaar
-rocket_drag_coefficient = 0.5 # to be defined
-parachute_drag_coefficient = 0.8 # approximatly
-
-rocket_diameter = 7.5e-2 # diameter in meter aanpasbaar
-parachute_diameter = 4.5e-1 # diameter in meter aanpasbaar
 has_parachute = True #aanpasbaar
-
-rocket_surface = m.pi * (rocket_diameter/2)**2 # eerst 4.42e-3
-parachute_surface = m.pi * (parachute_diameter/2)**2 # eerst 1.59e-1
-
-#fuel setup
-fuel_weight = 0.028 # still in kilograms and 0.024 for the D12
-brandtijd = 2.2 # seconden
-delaytime = 5.0 # seconden
-
-#natuur constantes
-valversnelling = 9.81 # meter per seconde kwadraat
-gasconstante = 287.05 # joule per kilogram kelvin
 
 # locatie aanpasbaar
 # school
@@ -190,12 +162,3 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, dt=
 
     return fig
 
-# rocket_weight = st.select_slider(
-#     "massa (gram)",
-#     options=my_range,
-#     value=500, on_change="rerun"
-# )
-
-fig = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length)
-
-st.plotly_chart(fig, use_container_width=True)
