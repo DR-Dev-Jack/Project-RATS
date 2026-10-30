@@ -6,7 +6,6 @@ from retry_requests import retry
 import math as m
 import plotly.express as px
 
-has_parachute = True #aanpasbaar
 
 # locatie aanpasbaar
 # school

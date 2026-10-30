@@ -1,8 +1,9 @@
-from pyarrow import null
-
 from main import calc_plot_values
 import streamlit as st
 import math as m
+import folium
+from streamlit_folium import st_folium
+
 
 #natuur constantes
 gasconstante = 287.05 # joule per kilogram kelvin
@@ -11,6 +12,14 @@ valversnelling = 9.81 # meter per seconde kwadraat
 # rocket setup
 rocket_drag_coefficient = 0.5 # to be defined
 parachute_drag_coefficient = 0.8 # approximatly
+
+# locatie setup
+def_lat = 52.36
+def_lon = 4.92
+
+if "marker_location" not in st.session_state:
+    st.session_state.marker_location = [def_lat, def_lon]  # default
+    st.session_state.zoom = 14  # default
 
 st.set_page_config(layout="wide")
 
@@ -140,6 +149,42 @@ with col2:
             st.write("Using default: TSP_E20.csv")
         else:
             st.write("Using uploaded file:", motor_curve_file.name)
+
+    with st.expander("Location settings"):
+        m = folium.Map(location=st.session_state.marker_location, zoom_start=st.session_state.zoom)
+
+        marker = folium.Marker(
+            location=st.session_state.marker_location,
+            draggable=False
+        )
+        marker.add_to(m)
+
+        map = st_folium(m, width=400, height=400, key="folium_map")
+
+        if map.get("last_clicked"):
+            lat = (map["last_clicked"]["lat"])
+            lng = (map["last_clicked"]["lng"])
+            st.session_state.marker_location = [lat, lng]
+            st.session_state.latitude = lat
+            st.session_state.longitude = lng
+            st.session_state.zoom = map["zoom"]
+
+            m = folium.Map(location=st.session_state.marker_location, zoom_start=st.session_state.zoom)
+            folium.Marker(
+                location=st.session_state.marker_location,
+                draggable=False
+            ).add_to(m)
+            map = st_folium(m, width=400, height= 400, key="folium_map")
+
+        if "longitude" and "latitude" in st.session_state:
+            latitude = st.session_state.latitude
+            longitude = st.session_state.longitude
+        else:
+            latitude = def_lat
+            longitude = def_lon
+
+        st.write(f"Coordinates: {st.session_state.marker_location}")
+        
 
     with st.expander("graph colors"):
         prediction_color = st.color_picker(
