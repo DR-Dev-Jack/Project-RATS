@@ -109,7 +109,7 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
         hcalc.append(h)
         xcalc.append(x)
         ycalc.append(y)
-        vcalc.append(abs(vh)+abs(vx)+abs(vy))
+        vcalc.append(vh)
 
         fs = np.interp(t, newton_time, newton)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g, pressure)
@@ -169,13 +169,13 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
 
     df3 = pd.DataFrame(dict(
         t=tcalc,
-        a=vcalc,
+        v=vcalc,
     ))
 
     fig3 = px.line(
         df3, 
         x="t", 
-        y="a", 
+        y="v",
         title="Snelheid",
         color_discrete_sequence=[color],
     )

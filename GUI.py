@@ -203,7 +203,7 @@ fig, fig2, fig3 = calc_plot_values(rocket_weight, valversnelling, gasconstante, 
 
 with col1:
     st.write("## Simulation Output")
-    tab1, tab2, tab3 = st.tabs(["3D xyz", "2D hoogte", "2D acceleratie"])
+    tab1, tab2, tab3 = st.tabs(["3D positie", "2D hoogte", "2D snelheid"])
     with tab1:
         st.plotly_chart(fig, width="stretch")
     with tab2:
