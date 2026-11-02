@@ -159,7 +159,7 @@ with col2:
         )
         marker.add_to(m)
 
-        map = st_folium(m, width=400, height=400, key="folium_map")
+        map = st_folium(m, width=400, height=400, key="folium_map", wrap_longitude=True)
 
         if map.get("last_clicked"):
             lat = (map["last_clicked"]["lat"])
@@ -174,7 +174,7 @@ with col2:
                 location=st.session_state.marker_location,
                 draggable=False
             ).add_to(m)
-            map = st_folium(m, width=400, height= 400, key="folium_map")
+            map = st_folium(m, width=400, height= 400, key="folium_map", wrap_longitude=True)
 
         if "longitude" and "latitude" in st.session_state:
             latitude = st.session_state.latitude
