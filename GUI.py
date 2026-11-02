@@ -199,7 +199,7 @@ with col2:
             disabled=True,
         )
 
-fig, fig2, fig3 = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file, prediction_color, skip_lines)
+fig, fig2, fig3 = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file, prediction_color, skip_lines, latitude, longitude)
 
 with col1:
     st.write("## Simulation Output")

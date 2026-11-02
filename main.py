@@ -6,26 +6,6 @@ from retry_requests import retry
 import math as m
 import plotly.express as px
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-# locatie aanpasbaar
-# school
-latitude = 52.36
-longitude = 4.92
-# woestijn
-# latitude = 24.58
-# longitude = 13.21
-
-api_acces_point = "https://api.open-meteo.com/v1/forecast"
-location_and_etc = {
-    "latitude": latitude,
-    "longitude": longitude,
-    "current": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "surface_pressure"],
-    "wind_speed_unit": "ms",
-}
-
 def get_live_data(url, params):
     cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
     retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
@@ -94,12 +74,21 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_di
     rocket_pitch += angular_velocity*dt
     return rocket_pitch, angular_velocity, Fwind
 
-def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, file_adres, color, skip_lines, dt=0.01):
+def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, file_adres, color, skip_lines, latitude, longitude, dt=0.01):
     hcalc, xcalc, ycalc, tcalc, vcalc = [], [], [], [], []
     t = h = x = y = vh = vx = vy = burned_weight = total = 0
     rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
 
     newton_time, newton = read_motor_curve_file(file_adres, skip_lines)
+
+    api_acces_point = "https://api.open-meteo.com/v1/forecast"
+    location_and_etc = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "current": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "surface_pressure"],
+        "wind_speed_unit": "ms",
+    }
+
     T, current_wind, pressure, wind_direction = get_live_data(api_acces_point, location_and_etc)
 
     gravitatie_c = 6.67e-11
@@ -178,9 +167,6 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
         color_discrete_sequence=[color],
     )
 
-<<<<<<< Updated upstream
-    return fig, fig2
-=======
     df3 = pd.DataFrame(dict(
         t=tcalc,
         a=vcalc,
@@ -195,4 +181,3 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
     )
 
     return fig, fig2, fig3
->>>>>>> Stashed changes
