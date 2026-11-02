@@ -6,7 +6,10 @@ from retry_requests import retry
 import math as m
 import plotly.express as px
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 # locatie aanpasbaar
 # school
 latitude = 52.36
@@ -92,7 +95,7 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_di
     return rocket_pitch, angular_velocity, Fwind
 
 def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, file_adres, color, skip_lines, dt=0.01):
-    hcalc, xcalc, ycalc, tcalc = [], [], [], []
+    hcalc, xcalc, ycalc, tcalc, vcalc = [], [], [], [], []
     t = h = x = y = vh = vx = vy = burned_weight = total = 0
     rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
 
@@ -117,6 +120,7 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
         hcalc.append(h)
         xcalc.append(x)
         ycalc.append(y)
+        vcalc.append(abs(vh)+abs(vx)+abs(vy))
 
         fs = np.interp(t, newton_time, newton)
         luchtdichtheid = calc_luchtdichtheid(R, T, h, g, pressure)
@@ -167,10 +171,28 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
     ))
 
     fig2 = px.line(
-        df2, x="t", 
+        df2, 
+        x="t", 
         y="h", 
         title="Hoogte",
         color_discrete_sequence=[color],
     )
 
+<<<<<<< Updated upstream
     return fig, fig2
+=======
+    df3 = pd.DataFrame(dict(
+        t=tcalc,
+        a=vcalc,
+    ))
+
+    fig3 = px.line(
+        df3, 
+        x="t", 
+        y="a", 
+        title="Snelheid",
+        color_discrete_sequence=[color],
+    )
+
+    return fig, fig2, fig3
+>>>>>>> Stashed changes

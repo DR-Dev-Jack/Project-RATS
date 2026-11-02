@@ -199,14 +199,14 @@ with col2:
             disabled=True,
         )
 
-fig, fig2 = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file, prediction_color, skip_lines)
+fig, fig2, fig3 = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file, prediction_color, skip_lines)
 
 with col1:
     st.write("## Simulation Output")
-    tab1, tab2, tab3 = st.tabs(["3D xyz", "2D tz", "extra?"])
+    tab1, tab2, tab3 = st.tabs(["3D xyz", "2D hoogte", "2D acceleratie"])
     with tab1:
         st.plotly_chart(fig, width="stretch")
     with tab2:
         st.plotly_chart(fig2, width="stretch")
     with tab3:
-        st.write("Another graph will be added here")
+        st.plotly_chart(fig3, width="stretch")
