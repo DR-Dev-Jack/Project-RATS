@@ -176,9 +176,8 @@ with col2:
             ).add_to(m)
             map = st_folium(m, width=400, height= 400, key="folium_map", wrap_longitude=True)
 
-        if "longitude" and "latitude" in st.session_state:
-            latitude = st.session_state.latitude
-            longitude = st.session_state.longitude
+        if "longitude" in st.session_state:
+            latitude, longitude = st.session_state.marker_location
         else:
             latitude = def_lat
             longitude = def_lon

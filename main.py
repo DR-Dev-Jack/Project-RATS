@@ -34,7 +34,7 @@ def read_motor_curve_file(adress, skip):
     return time, thrust
 
 def calc_luchtdichtheid(R, T, h, g, Po):
-    M = float(2.9*10**-2)
+    M = 2.9*10**-2
     t_op_hoogte = T-(6.5e-3*h)
     presure_at_height = Po * m.e**((-1.0 * M*g*h)/(R*t_op_hoogte))
     luchtdichtheid = presure_at_height/(R*t_op_hoogte)
@@ -76,7 +76,7 @@ def calc_pitch(rocket_pitch, angular_velocity, wind_speed, rocket_speed, wind_di
 
 def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has_parachute, file_adres, color, skip_lines, latitude, longitude, dt=0.01):
     hcalc, xcalc, ycalc, tcalc, vcalc = [], [], [], [], []
-    t = h = x = y = vh = vx = vy = burned_weight = total = 0
+    t = h = x = y = vh = vx = vy = burned_weight = 0
     rP = rPx = rPy = aV = aVx = aVy = Fwindx = Fwindy = 0
 
     newton_time, newton = read_motor_curve_file(file_adres, skip_lines)
@@ -95,8 +95,7 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
     mass_earth = 5.97e24
     radius_earth = 6.364844e6
 
-    for i in range(int(newton_time[-1]/dt)):
-        total += np.interp(i*dt, newton_time, newton)
+    impulse = np.trapezoid(newton, newton_time) # integrates motor curve
 
     check = False
     while h >= 0:
@@ -119,7 +118,7 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
             k = calc_k(luchtdichtheid, Ar, rcd)
         fd = calc_drag(k, vh)
         burned_weight += fs * dt
-        minus_weight = burned_weight / total * fuel
+        minus_weight = fuel * burned_weight / impulse
 
         fz = gravitatie_c * (((mass - minus_weight) * mass_earth) / (radius_earth + h) ** 2)
 
