@@ -6,22 +6,6 @@ from retry_requests import retry
 import math as m
 import plotly.express as px
 
-def analyse_height(file_adres, color):
-    height = []
-    data = pd.read_csv(file_adres)
-    temp = data['temperature'].to_numpy()
-    press = data['air pressure'].to_numpy()
-    time = data['timestamp'].to_numpy()
-    for i in range(len(time)):
-        height.append(calc_height(temp[i]+273.15, press[i], press[0]))
-    
-    df = pd.DataFrame(dict(
-            t=time/1000,  # Convert timestamp to seconds
-            h=height,
-        ))
-
-    return df
-
 def get_live_data(url, params):
     cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
     retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
@@ -54,11 +38,8 @@ def calc_luchtdichtheid(R, T, h, g, Po):
     t_op_hoogte = T-(6.5e-3*h)
     presure_at_height = Po * m.e**((-1.0 * M*g*h)/(R*t_op_hoogte))
     luchtdichtheid = presure_at_height/(R*t_op_hoogte)
-    return luchtdichtheid
 
-def calc_height(T, P, Po, R=287, g = 9.81):
-    hoogte = (R*T)/g * m.log(Po/P)
-    return hoogte
+    return luchtdichtheid
 
 def calc_k (p, A, cd):
     return .5*p*A*cd #p is luchtdichtheid, A is oppervlak, cd is drag coefficient
@@ -118,6 +99,7 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
 
     check = False
     while h >= 0:
+        # using RK4 would be better than this simple version of eulors function
         h += vh*dt
         x += vx*dt
         y += vy*dt
@@ -163,14 +145,38 @@ def calc_plot_values (mass, g, R, Ar, rcd, pcd, fuel, bt, delay, Ap, length, has
         z=hcalc
     ))
 
+    fig = px.line_3d(
+        df, x="x", 
+        y="y", 
+        z="z", 
+        title="Positie",
+        color_discrete_sequence=[color],
+    )
+
     df2 = pd.DataFrame(dict(
         t=tcalc,
         h=hcalc,
     ))
+
+    fig2 = px.line(
+        df2, 
+        x="t", 
+        y="h", 
+        title="Hoogte",
+        color_discrete_sequence=[color],
+    )
 
     df3 = pd.DataFrame(dict(
         t=tcalc,
         v=vcalc,
     ))
 
-    return df, df2, df3
+    fig3 = px.line(
+        df3, 
+        x="t", 
+        y="v",
+        title="Snelheid",
+        color_discrete_sequence=[color],
+    )
+
+    return fig, fig2, fig3
