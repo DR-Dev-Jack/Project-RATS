@@ -1,8 +1,10 @@
-from main import calc_plot_values
+from main import calc_plot_values, analyse_height
 import streamlit as st
 import math as m
 import folium
 from streamlit_folium import st_folium
+import plotly.express as px
+import plotly.graph_objects as go
 
 
 #natuur constantes
@@ -198,7 +200,50 @@ with col2:
             disabled=True,
         )
 
-fig, fig2, fig3 = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file, prediction_color, skip_lines, latitude, longitude)
+df, df2, df3 = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file, prediction_color, skip_lines, latitude, longitude)
+
+Tdf = analyse_height("TestData.csv", trajectory_color)
+
+fig = px.line_3d(
+    df, x="x", 
+    y="y", 
+    z="z", 
+    title="Positie",
+    color_discrete_sequence=[prediction_color],
+)
+
+fig2 = go.Figure()
+
+fig2.add_trace(go.Scatter(
+    x=df2['t'],
+    y=df2['h'],
+    mode='lines',
+    name='Prediction',
+    line=dict(color=prediction_color)
+))
+fig2.add_trace(go.Scatter(
+    x=Tdf['t'],
+    y=Tdf['h'],
+    mode='lines',
+    name='Trajectory',
+    line=dict(color=trajectory_color)
+))
+
+px.line(
+    df2, 
+    x="t", 
+    y="h", 
+    title="Hoogte",
+    color_discrete_sequence=[prediction_color],
+)
+
+fig3 = px.line(
+    df3, 
+    x="t", 
+    y="v",
+    title="Snelheid",
+    color_discrete_sequence=[prediction_color],
+)
 
 with col1:
     st.write("## Simulation Output")
