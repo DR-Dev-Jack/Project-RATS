@@ -6,7 +6,6 @@ from streamlit_folium import st_folium
 import plotly.express as px
 import plotly.graph_objects as go
 
-
 #natuur constantes
 gasconstante = 287.05 # joule per kilogram kelvin
 valversnelling = 9.81 # meter per seconde kwadraat
@@ -203,7 +202,7 @@ with col2:
 
 df, df2, df3 = calc_plot_values(rocket_weight, valversnelling, gasconstante, rocket_surface, rocket_drag_coefficient, parachute_drag_coefficient, fuel_weight, brandtijd, delaytime, parachute_surface, rocket_length, has_parachute, motor_curve_file, prediction_color, skip_lines, latitude, longitude)
 
-Tdf = analyse_height("TestData.csv", trajectory_color)
+Tdf = analyse_height("TestData.csv")
 
 fig = px.line_3d(
     df, x="x", 
@@ -255,3 +254,4 @@ with col1:
         st.plotly_chart(fig2, width="stretch")
     with tab3:
         st.plotly_chart(fig3, width="stretch")
+        

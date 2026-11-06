@@ -6,7 +6,11 @@ from retry_requests import retry
 import math as m
 import plotly.express as px
 
-def analyse_height(file_adres, color):
+cache_session = requests_cache.CachedSession('.cache', expire_after = 900)
+retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
+openmeteo = openmeteo_requests.Client(session = retry_session)
+
+def analyse_height(file_adres):
     height = []
     data = pd.read_csv(file_adres)
     temp = data['temperature'].to_numpy()
@@ -23,23 +27,24 @@ def analyse_height(file_adres, color):
     return df
 
 def get_live_data(url, params):
-    cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
-    retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
-    openmeteo = openmeteo_requests.Client(session = retry_session)
-    responses = openmeteo.weather_api(url, params = params)
-    response = responses[0]
-    current = response.Current()
-    current_temperature_2m = current.Variables(0).Value()
-    current_wind_speed_10m = current.Variables(1).Value()
-    current_wind_direction_10m = current.Variables(2).Value()
-    current_surface_pressure = current.Variables(3).Value()
-    temprature_in_kelvin = current_temperature_2m + 273.15
-    pressure_in_pascal = current_surface_pressure * 100
-    print("tempratuur: ", current_temperature_2m)
-    print("wind speed: ", current_wind_speed_10m)
-    print("wind direction: ", current_wind_direction_10m)
-    print("pressure: ", current_surface_pressure)
-    return temprature_in_kelvin, current_wind_speed_10m, pressure_in_pascal, current_wind_direction_10m
+    try:
+        responses = openmeteo.weather_api(url, params = params)
+        response = responses[0]
+        current = response.Current()
+        current_temperature_2m = current.Variables(0).Value()
+        current_wind_speed_10m = current.Variables(1).Value()
+        current_wind_direction_10m = current.Variables(2).Value()
+        current_surface_pressure = current.Variables(3).Value()
+        temprature_in_kelvin = current_temperature_2m + 273.15
+        pressure_in_pascal = current_surface_pressure * 100
+        print("tempratuur: ", current_temperature_2m)
+        print("wind speed: ", current_wind_speed_10m)
+        print("wind direction: ", current_wind_direction_10m)
+        print("pressure: ", current_surface_pressure)
+        return temprature_in_kelvin, current_wind_speed_10m, pressure_in_pascal, current_wind_direction_10m
+    except Exception as e:
+        print("Using default values due to error fetching live data:", e)
+        return 288, 5, 10.23, 90  # Return default values in case of error
 
 def read_motor_curve_file(adress, skip):
     data = pd.read_csv(adress, skiprows=skip)
