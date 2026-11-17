@@ -20,7 +20,7 @@ def analyse_height(file_adres):
         height.append(calc_height(temp[i]+273.15, press[i], press[0]))
     
     df = pd.DataFrame(dict(
-            t=time/1000,  # Convert timestamp to seconds
+            t=time/1000- time[0]/1000,  # Convert timestamp to seconds
             h=height,
         ))
 
